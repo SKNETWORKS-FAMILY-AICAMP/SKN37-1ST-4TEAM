@@ -30,11 +30,6 @@ SKN37기 4조 · 팀 프로젝트
     - [10.1 전체 비교 탭](#101-전체-비교-탭)
     - [10.2 연도 상세 탭](#102-연도-상세-탭)
     - [10.3 사고다발지점 탭](#103-사고다발지점-탭)
-11. [실행 방법](#11-실행-방법)
-    - [11.1 폴더 구조](#111-폴더-구조)
-    - [11.2 화면 이미지 목록](#112-화면-이미지-목록)
-12. [데이터 해석 주의사항](#12-데이터-해석-주의사항)
-13. [향후 계획](#13-향후-계획)
 
 ---
 
@@ -109,89 +104,14 @@ pymysql
 
 ![holiday_db ERD](images/erd.png)
 
-<details>
-<summary>Mermaid 원문 펼치기 (db/holiday_db_erd.mmd — 첨부본 그대로)</summary>
-
-```mermaid
----
-title: holiday_db ERD — 대한민국 명절 교통사고 데이터
-config:
-  theme: base
-  themeVariables:
-    fontFamily: "'Noto Sans CJK KR', 'Noto Sans KR', 'Malgun Gothic', sans-serif"
-    fontSize: 15px
-    primaryColor: "#FFFFFF"
-    primaryBorderColor: "#94A3B8"
-    lineColor: "#64748B"
-    tertiaryColor: "#F1F5F9"
-  er:
-    minEntityWidth: 120
-  themeCSS: "text, span, p, div{font-family:'Noto Sans CJK KR',sans-serif !important} .edgeLabel, .edgeLabel p, .labelBkg{background:#FFFFFF !important} .er.entityBox{fill:#FFFFFF;stroke:#94A3B8} .er.attributeBoxOdd{fill:#FFFFFF} .er.attributeBoxEven{fill:#F8FAFC} .er.relationshipLabelBox{fill:#FFFFFF;opacity:1} .er.relationshipLine{stroke:#64748B;stroke-width:1.4px} [id*=entity-holiday_dates] .er.entityBox, [id*=entity-holiday_dates] rect:first-of-type{fill:#EAF3FF} "
----
-erDiagram
-    direction LR
-    holiday_dates["holiday_dates · 명절 당일"] {
-        smallint year PK "연도"
-        enum holiday PK "명절 (설날/추석)"
-        date d_day "명절 당일 D (음력 1/1, 8/15)"
-    }
-    accident_daily["accident_daily · 연휴 사고통계"] {
-        int_unsigned id PK "자동 증가"
-        smallint year FK "연도"
-        enum holiday FK "명절 (설날/추석)"
-        date acc_date UK "날짜"
-        char weekday "요일"
-        enum level "집계 단위 (전국/시도/시군구)"
-        varchar sido FK "시도 (전국 합계 행은 전국)"
-        varchar sigungu UK "시군구 (시도 합계 행은 소계)"
-        int accidents "사고 건수"
-        int deaths "사망자"
-        int serious "중상자"
-        int injuries "부상자 (중상 포함)"
-    }
-    sido_boundary["sido_boundary · 시도 경계"] {
-        varchar sido PK "시도"
-        json geojson "GeoJSON Feature (지도용)"
-    }
-    hotspot["hotspot · 사고다발지점"] {
-        int_unsigned id PK "자동 증가"
-        varchar name "지점명"
-        varchar sido FK "시도"
-        varchar sigungu "시군구 (원본)"
-        varchar sigungu_base "시군구 (사고통계와 맞춘 이름)"
-        int accidents "사고 건수"
-        int casualties "사상자"
-        int deaths "사망"
-        int serious "중상"
-        int minor "경상"
-        int reported "부상신고"
-        decimal lon "경도"
-        decimal lat "위도"
-    }
-    faq["faq · 보험 FAQ"] {
-        int_unsigned id PK "자동 증가"
-        varchar category "항목"
-        varchar question "질문"
-        text answer "답변"
-        varchar source "출처 (보험사)"
-    }
-
-    holiday_dates ||--o{ accident_daily : "연도·명절별 일자 (year, holiday)"
-    sido_boundary |o..o{ accident_daily : "시도 (sido)"
-    sido_boundary ||..o{ hotspot : "시도 (sido)"
-    accident_daily }o..o{ hotspot : "같은 시군구 (sido+sigungu = sido+sigungu_base)"
-```
-
-</details>
-
 ### 6.1 테이블 설명
 
 | 테이블 | 행 수 | 설명 | 주요 키·제약 |
 |---|---|---|---|
-| accident_daily | 8,901 | 연휴 날짜 × 지역별 사고통계. `level`로 전국(36행)·시도(612행)·시군구(8,253행)를 구분 | PK `id`, UNIQUE `(acc_date, holiday, sido, sigungu)`, INDEX `(year, holiday, level)` |
-| holiday_dates | 10 | 연도·명절별 명절 당일. 일자별 D(-1, 0, +1…) 계산 기준 | PK `(year, holiday)` |
-| hotspot | 81 | 연휴기간 사고다발지역(2021~2025 합산, 5년 묶음). 좌표 포함 | PK `id`, INDEX `(sido, sigungu_base)` |
-| sido_boundary | 17 | 시도 경계 GeoJSON. 지도 배경용 | PK `sido` |
+| accident_daily | 8,901 | 연휴 날짜 × 지역별 사고통계. `level`로 전국·시도·시군구를 구분 | PK `id`, UNIQUE `(acc_date, holiday, sido, sigungu)`, INDEX `(year, holiday, level)` |
+| holiday_dates | 10 | 연도·명절별 명절 당일. 일자별 D 계산 기준 | PK `(year, holiday)` |
+| hotspot | 81 | 연휴기간 사고다발지역(21~25년 합산, 5년 묶음). 좌표 포함 | PK `id`, INDEX `(sido, sigungu_base)` |
+| sido_boundary | 17 | 지도 배경용 | PK `sido` |
 | faq | 348 | 보험 FAQ. 답변 끝의 `(출처 : 보험사)`를 별도 컬럼으로 분리 | PK `id`, INDEX `category`, `source` |
 
 ### 6.2 설계 포인트
@@ -473,87 +393,3 @@ erDiagram
 | 6 | 서귀포시 서귀동(중앙로터리 부근) | 20명 | 발생 10건 · 중상 0 · 경상 15 |
 
 그 아래에 전체 목록 카드가 있어, 필터에 걸린 81곳(또는 지역 필터 결과)을 표로 모두 확인할 수 있습니다.
-
-## 11. 실행 방법
-
-```bash
-git clone <repository-url>
-cd <repository-folder>
-
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-
-# 1) DB 만들기 (선택) — MySQL Workbench에서 실행
-#    File > Open SQL Script… > db/holiday_db.sql > ⚡(Execute)
-# 2) 접속 정보 수정 — db_config.py 의 MYSQL 값 (host / port / user / password / database)
-
-streamlit run app.py
-# 브라우저에서 http://localhost:8501 접속
-```
-
-`db/build_mysql.py`는 `data/` 폴더를 읽어 `db/holiday_db.sql`을 다시 생성하는 스크립트입니다. 데이터가 바뀌면 이 스크립트를 먼저 돌리세요.
-
-```bash
-python db/build_mysql.py
-```
-
-### 11.1 폴더 구조
-
-```text
-.
-├── app.py                  # 페이지 뼈대 · 사이드바 메뉴/지표/일평균 · 탭
-├── sections.py             # 화면 카드들
-├── analysis.py             # 계산 함수 (일평균 · 치사율 · D-day · TOP10 등)
-├── theme.py                # 색 · 글꼴 · CSS   ← 별도 포함 필요
-├── faq.py                  # 보험 FAQ 화면
-├── data_source.py          # MySQL → 표 (실패 시 CSV)
-├── db_config.py            # MySQL 접속 정보
-├── requirements.txt
-├── db/
-│   ├── build_mysql.py      # data/ → holiday_db.sql 생성
-│   ├── holiday_db.sql      # DB · 테이블 · 데이터 · 뷰 일괄 생성
-│   ├── holiday_db_erd.mmd  # ERD (Mermaid)
-│   └── README.md
-├── data/
-│   ├── holiday_accidents_2021_2025.csv
-│   ├── hotspots_2021_2025.csv
-│   ├── sido.geojson
-│   └── faq/insurance_faq.csv
-└── images/                 # README 이미지
-```
-
-### 11.2 화면 이미지 목록
-
-| 파일 | 내용 |
-|---|---|
-| images/screen_overview.png | 전체 비교 탭 전체 |
-| images/screen_year.png | 연도 상세 탭 전체 |
-| images/screen_hotspot.png | 사고다발지점 탭 전체 |
-| images/screen_faq.png | 보험 FAQ 화면 |
-| images/erd.png | holiday_db ERD |
-
-## 12. 데이터 해석 주의사항
-
-1. 연휴 길이 차이 — 연휴는 해마다 3~5일로 다릅니다. 총량 비교는 왜곡될 수 있으므로 `일평균 보정`을 켜고 보세요.
-2. 부상자에 중상자 포함 — `injuries`에 `serious`가 포함되어 있어 부상 + 중상으로 더하면 이중계상입니다.
-3. 집계 기준 — 사고통계는 발생일 기준이며, 원자료 갱신 시점에 따라 값이 달라질 수 있습니다.
-4. 사고다발지역 기준 — 원자료는 일정 반경 내 사고가 여러 건 이상인 지점만 담습니다. 따라서 사고다발지역 합계(사고 432건)는 전국 합계(12,948건)의 부분집합이며, 둘을 직접 비교하면 안 됩니다.
-5. 다발지역 연도 구분 없음 — 사고다발지역은 2021~2025 5년 묶음 자료라 연도 필터가 적용되지 않습니다.
-6. 좌표 정확도 — 다발지역 좌표는 대표 지점이라 수십 미터 오차가 있을 수 있습니다.
-7. 사고다발지점 TOP 6 정렬 기준 — 사상자 순이며, 사고 건수 순이 아닙니다.
-8. FAQ의 성격 — 보험사 안내문을 정리한 참고 자료이며, 보상 판단의 법적 근거가 아닙니다. 실제 보상은 보험사와 약관을 확인하세요.
-9. 기준 시점 — 화면의 자료 범위는 2021.02 ~ 2025.10이며, 이후 공표 자료는 반영되지 않았습니다.
-
-## 13. 향후 계획
-
-1. 기간 확대 — 여름휴가·설·추석 인접 주말까지 비교 범위를 넓힙니다.
-2. 일평균 기준 UI 정리 — 보정 토글 상태를 화면 상단에 항상 표시해, 지금 보는 값이 합계인지 일평균인지 헷갈리지 않게 합니다.
-3. 위험 등급 지도 — 시도별 사고량과 다발지역을 위험 등급(색 단계)으로 묶어 한 장에 표현합니다.
-4. 데이터 파이프라인 자동화 — 크롤링·CSV 정리·`holiday_db.sql` 생성을 스케줄로 돌려 수동 작업을 없앱니다.
-5. FAQ 고도화 — 검색 기능과 사고 유형별 분류를 추가해, 대시보드 인사이트에서 FAQ로 바로 이동하게 연결합니다.
-6. 검증 자동화 — 합계 검증(시도·시군구 소계 = 전국 합계)을 테스트 코드로 넣어 데이터 갱신 시 이상을 바로 잡습니다.
-
----
-
-문의: SKN37기 4조 (팀장 문진호)
