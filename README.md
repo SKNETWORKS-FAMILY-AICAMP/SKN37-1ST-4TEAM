@@ -235,10 +235,9 @@ pymysql
 주요 사용 시나리오: 연휴 사고 관련 보상 절차·특약·자기부담금 같은 궁금증을 대시보드 안에서 바로 확인합니다. FAQ는 보험사 고객센터 안내문을 정리한 참고 자료이며, 법적 판단의 근거는 아닙니다.
 
 ## 시연영상
-https://github.com/user-attachments/assets/f2d795a3-f2bc-4bdb-9f98-08c1df076a2c
-https://github.com/user-attachments/assets/403e7c9a-0bf8-4593-9d7b-1db1acedccb2
+https://github.com/user-attachments/assets/95aa7ab1-0b78-4fdc-8428-7cccffd6db00
 
-
+https://github.com/user-attachments/assets/bb481f87-e623-41d5-b413-3708eb552c48
 
 
 ## 10. 구현 화면과 기능
