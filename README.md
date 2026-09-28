@@ -236,6 +236,8 @@ pymysql
 
 ## 시연영상
 https://github.com/user-attachments/assets/f2d795a3-f2bc-4bdb-9f98-08c1df076a2c
+https://github.com/user-attachments/assets/403e7c9a-0bf8-4593-9d7b-1db1acedccb2
+
 
 
 
