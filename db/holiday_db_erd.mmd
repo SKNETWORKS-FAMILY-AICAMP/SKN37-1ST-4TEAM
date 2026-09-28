@@ -1,0 +1,67 @@
+---
+title: holiday_db ERD — 대한민국 명절 교통사고 데이터
+config:
+  theme: base
+  themeVariables:
+    fontFamily: "'Noto Sans CJK KR', 'Noto Sans KR', 'Malgun Gothic', sans-serif"
+    fontSize: 15px
+    primaryColor: "#FFFFFF"
+    primaryBorderColor: "#94A3B8"
+    lineColor: "#64748B"
+    tertiaryColor: "#F1F5F9"
+  er:
+    minEntityWidth: 120
+  themeCSS: "text, span, p, div{font-family:'Noto Sans CJK KR',sans-serif !important} .edgeLabel, .edgeLabel p, .labelBkg{background:#FFFFFF !important} .er.entityBox{fill:#FFFFFF;stroke:#94A3B8} .er.attributeBoxOdd{fill:#FFFFFF} .er.attributeBoxEven{fill:#F8FAFC} .er.relationshipLabelBox{fill:#FFFFFF;opacity:1} .er.relationshipLine{stroke:#64748B;stroke-width:1.4px} [id*=entity-holiday_dates] .er.entityBox, [id*=entity-holiday_dates] rect:first-of-type{fill:#EAF3FF} "
+---
+erDiagram
+    direction LR
+    holiday_dates["holiday_dates · 명절 당일"] {
+        smallint year PK "연도"
+        enum holiday PK "명절 (설날/추석)"
+        date d_day "명절 당일 D (음력 1/1, 8/15)"
+    }
+    accident_daily["accident_daily · 연휴 사고통계"] {
+        int_unsigned id PK "자동 증가"
+        smallint year FK "연도"
+        enum holiday FK "명절 (설날/추석)"
+        date acc_date UK "날짜"
+        char weekday "요일"
+        enum level "집계 단위 (전국/시도/시군구)"
+        varchar sido FK "시도 (전국 합계 행은 전국)"
+        varchar sigungu UK "시군구 (시도 합계 행은 소계)"
+        int accidents "사고 건수"
+        int deaths "사망자"
+        int serious "중상자"
+        int injuries "부상자 (중상 포함)"
+    }
+    sido_boundary["sido_boundary · 시도 경계"] {
+        varchar sido PK "시도"
+        json geojson "GeoJSON Feature (지도용)"
+    }
+    hotspot["hotspot · 사고다발지점"] {
+        int_unsigned id PK "자동 증가"
+        varchar name "지점명"
+        varchar sido FK "시도"
+        varchar sigungu "시군구 (원본)"
+        varchar sigungu_base "시군구 (사고통계와 맞춘 이름)"
+        int accidents "사고 건수"
+        int casualties "사상자"
+        int deaths "사망"
+        int serious "중상"
+        int minor "경상"
+        int reported "부상신고"
+        decimal lon "경도"
+        decimal lat "위도"
+    }
+    faq["faq · 보험 FAQ"] {
+        int_unsigned id PK "자동 증가"
+        varchar category "항목"
+        varchar question "질문"
+        text answer "답변"
+        varchar source "출처 (보험사)"
+    }
+
+    holiday_dates ||--o{ accident_daily : "연도·명절별 일자 (year, holiday)"
+    sido_boundary |o..o{ accident_daily : "시도 (sido)"
+    sido_boundary ||..o{ hotspot : "시도 (sido)"
+    accident_daily }o..o{ hotspot : "같은 시군구 (sido+sigungu = sido+sigungu_base)"
